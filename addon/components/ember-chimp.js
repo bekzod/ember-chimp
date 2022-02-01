@@ -4,6 +4,7 @@ import { inject as service } from '@ember/service';
 import Component from '@ember/component';
 import Ember from 'ember';
 import defaultResponses from 'ember-chimp/lib/default-responses';
+import fetch from 'fetch';
 
 const {
   Logger
@@ -46,7 +47,6 @@ export default Component.extend({
   didSubmitAction:   null,
   responses:         defaultResponses,
   isLoading:         equal('chimpState', 'loading'),
-  ajax:              service(),
 
   actions: {
     valueDidChange() {
@@ -83,6 +83,7 @@ export default Component.extend({
     });
     
     let request = this.makeRequest(formAction)
+      .then(res => res.json())
       .then(response => this.handleResponse(response))
       .catch(() => this._triggerInvalid());
 
@@ -100,9 +101,12 @@ export default Component.extend({
     @return {Ember.RSVP.Promise} Returns the request promise.
   */
   makeRequest(formAction) {
-    return get(this, 'ajax').request(formAction, {
-      data: this._buildData(),
-      dataType: 'jsonp'
+    return fetch(formAction, {
+      method: 'POST',
+      body: JSON.stringify(this._buildData()),
+      headers: {
+        'Content-Type': 'application/json'
+      }
     });
   },
 
